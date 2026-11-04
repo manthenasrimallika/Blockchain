@@ -6,6 +6,7 @@ from model.url_checker import analyze_urls_in_text, analyze_url
 from model.image_analyzer import analyze_image
 from model.trusted_sources import get_all_sources
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -16,12 +17,17 @@ app = FastAPI(
     version="2.0.0",
 )
 
+ALLOWED_ORIGINS = [
+    os.getenv("CLIENT_URL", "http://localhost:5173"),
+    os.getenv("BACKEND_URL", "http://localhost:5000"),
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 classifier = FakeNewsClassifier()
