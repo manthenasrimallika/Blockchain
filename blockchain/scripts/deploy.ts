@@ -24,6 +24,10 @@ async function main() {
   const moderationContractAddress = await moderationContract.getAddress();
   console.log("ModerationContract deployed to:", moderationContractAddress);
 
+  // Authorize ModerationContract to update reputation scores in UserRegistry
+  await userRegistry.authorizeCaller(moderationContractAddress);
+  console.log("ModerationContract authorized as reputation updater in UserRegistry");
+
   const addresses = {
     UserRegistry: userRegistryAddress,
     PostRegistry: postRegistryAddress,

@@ -10,12 +10,27 @@ contract UserRegistry {
         uint256 registeredAt;
     }
 
+    address public owner;
+    mapping(address => bool) private authorizedCallers;
+
     mapping(address => User) private users;
     mapping(string => address) private usernameToAddress;
     address[] private userAddresses;
 
     event UserRegistered(address indexed wallet, string username, uint256 timestamp);
     event ReputationUpdated(address indexed wallet, uint256 newScore, uint256 timestamp);
+    event CallerAuthorized(address indexed caller);
+    event CallerRevoked(address indexed caller);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
+    }
+
+    modifier onlyAuthorized() {
+        require(authorizedCallers[msg.sender], "Not authorized to update reputation");
+        _;
+    }
 
     modifier onlyRegistered() {
         require(users[msg.sender].exists, "User not registered");
@@ -25,6 +40,20 @@ contract UserRegistry {
     modifier notRegistered() {
         require(!users[msg.sender].exists, "User already registered");
         _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function authorizeCaller(address _caller) external onlyOwner {
+        authorizedCallers[_caller] = true;
+        emit CallerAuthorized(_caller);
+    }
+
+    function revokeCaller(address _caller) external onlyOwner {
+        authorizedCallers[_caller] = false;
+        emit CallerRevoked(_caller);
     }
 
     function registerUser(string calldata _username) external notRegistered {
@@ -64,7 +93,7 @@ contract UserRegistry {
         return users[_wallet].reputationScore;
     }
 
-    function updateReputation(address _wallet, uint256 _newScore) external {
+    function updateReputation(address _wallet, uint256 _newScore) external onlyAuthorized {
         require(users[_wallet].exists, "User does not exist");
         require(_newScore <= 1000, "Score exceeds maximum");
         users[_wallet].reputationScore = _newScore;
