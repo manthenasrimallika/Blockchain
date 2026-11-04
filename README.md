@@ -2,6 +2,7 @@
 
 > A full-stack decentralized social media platform with blockchain-backed content ownership, AI-powered fake news detection, end-to-end encrypted messaging, and privacy-first access control.
 
+![CI](https://github.com/manthenasrimallika/Blockchain/actions/workflows/ci.yml/badge.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat&logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.20-363636?style=flat&logo=solidity)
