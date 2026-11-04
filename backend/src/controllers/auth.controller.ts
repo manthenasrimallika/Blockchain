@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
 const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d";
 
 function generateToken(userId: string): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRY as any });
 }
 
 export async function register(req: Request, res: Response, next: NextFunction) {
