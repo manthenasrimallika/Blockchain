@@ -1,0 +1,110 @@
+name: DecentraSocial CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Job 1: Backend ──────────────────────────────────────────
+  backend:
+    name: Backend — Install & Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+  # ── Job 2: Frontend ─────────────────────────────────────────
+  frontend:
+    name: Frontend — Install & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+  # ── Job 3: Smart Contracts ──────────────────────────────────
+  blockchain:
+    name: Blockchain — Compile & Test Contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: blockchain
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: blockchain/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile smart contracts
+        run: npx hardhat compile
+
+      - name: Run contract tests
+        run: npx hardhat test
+
+  # ── Job 4: ML Service ───────────────────────────────────────
+  ml-service:
+    name: ML Service — Install & Syntax Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Python syntax check
+        run: python -m py_compile main.py model/classifier.py model/url_checker.py model/image_analyzer.py
