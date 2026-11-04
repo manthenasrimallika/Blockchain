@@ -46,17 +46,27 @@ describe("UserRegistry", function () {
   });
 
   describe("Reputation", function () {
-    it("should update reputation score", async function () {
+    it("should update reputation score when caller is authorized", async function () {
+      // owner authorizes itself as a trusted caller (simulating ModerationContract)
+      await userRegistry.connect(owner).authorizeCaller(owner.address);
       await userRegistry.connect(addr1).registerUser("alice");
-      await userRegistry.updateReputation(addr1.address, 200);
+      await userRegistry.connect(owner).updateReputation(addr1.address, 200);
       const score = await userRegistry.getReputationScore(addr1.address);
       expect(score).to.equal(200);
     });
 
-    it("should reject score above maximum", async function () {
+    it("should reject reputation update from unauthorized caller", async function () {
       await userRegistry.connect(addr1).registerUser("alice");
       await expect(
-        userRegistry.updateReputation(addr1.address, 1001)
+        userRegistry.connect(addr2).updateReputation(addr1.address, 200)
+      ).to.be.revertedWith("Not authorized to update reputation");
+    });
+
+    it("should reject score above maximum", async function () {
+      await userRegistry.connect(owner).authorizeCaller(owner.address);
+      await userRegistry.connect(addr1).registerUser("alice");
+      await expect(
+        userRegistry.connect(owner).updateReputation(addr1.address, 1001)
       ).to.be.revertedWith("Score exceeds maximum");
     });
   });
