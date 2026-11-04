@@ -49,6 +49,19 @@ const VISIBILITY_MAP: Record<string, number> = {
   private: 2,
 };
 
+async function sendNotification(
+  toUserId: string,
+  fromUserId: string,
+  type: string,
+  referenceId: string,
+  message: string
+) {
+  if (toUserId === fromUserId) return;
+  await Notification.create({ userId: toUserId, fromUserId, type, referenceId, message });
+  const io = getSocketIO();
+  if (io) io.to(toUserId).emit("notification", { type, referenceId, fromUserId });
+}
+
 export async function createPost(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { content, visibility = "public" } = req.body;
@@ -211,22 +224,9 @@ export async function likePost(req: AuthRequest, res: Response, next: NextFuncti
       post.likes.push(userId as any);
 
       if (post.userId.toString() !== userId) {
-        await Notification.create({
-          userId: post.userId,
-          fromUserId: userId,
-          type: "like",
-          referenceId: post._id.toString(),
-          message: "liked your post",
-        });
-
-        const io = getSocketIO();
-        if (io) {
-          io.to(post.userId.toString()).emit("notification", {
-            type: "like",
-            postId: post._id,
-            fromUserId: userId,
-          });
-        }
+        await sendNotification(
+          post.userId.toString(), userId, "like", post._id.toString(), "liked your post"
+        );
       }
     }
 
@@ -252,22 +252,9 @@ export async function addComment(req: AuthRequest, res: Response, next: NextFunc
     );
 
     if (post.userId.toString() !== userId) {
-      await Notification.create({
-        userId: post.userId,
-        fromUserId: userId,
-        type: "comment",
-        referenceId: post._id.toString(),
-        message: "commented on your post",
-      });
-
-      const io = getSocketIO();
-      if (io) {
-        io.to(post.userId.toString()).emit("notification", {
-          type: "comment",
-          postId: post._id,
-          fromUserId: userId,
-        });
-      }
+      await sendNotification(
+        post.userId.toString(), userId, "comment", post._id.toString(), "commented on your post"
+      );
     }
 
     const updated = await Post.findById(post._id)
@@ -336,21 +323,9 @@ export async function reactToPost(req: AuthRequest, res: Response, next: NextFun
       post.reactions.push({ userId: userId as any, type: type as any });
 
       if (post.userId.toString() !== userId) {
-        await Notification.create({
-          userId: post.userId,
-          fromUserId: userId,
-          type: "like",
-          referenceId: post._id.toString(),
-          message: `reacted ${type} to your post`,
-        });
-        const io = getSocketIO();
-        if (io) {
-          io.to(post.userId.toString()).emit("notification", {
-            type: "like",
-            postId: post._id,
-            fromUserId: userId,
-          });
-        }
+        await sendNotification(
+          post.userId.toString(), userId, "like", post._id.toString(), `reacted ${type} to your post`
+        );
       }
     }
 
